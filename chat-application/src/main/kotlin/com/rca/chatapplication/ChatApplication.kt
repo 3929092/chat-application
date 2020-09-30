@@ -2,6 +2,7 @@ package com.rca.chatapplication
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.socket.config.annotation.EnableWebSocket
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer
@@ -18,7 +19,10 @@ fun main(args: Array<String>) {
 @EnableWebSocket
 class WebSocketConfig : WebSocketConfigurer {
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        registry.addHandler(ChatHandler(), "/chat").setAllowedOrigins("*")
+        registry.addHandler(ChatHandler(chatHistoryService()), "/chat").setAllowedOrigins("*")
     }
+
+    @Bean
+    fun chatHistoryService() = ChatHistoryService()
 
 }

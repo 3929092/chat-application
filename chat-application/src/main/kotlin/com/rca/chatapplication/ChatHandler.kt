@@ -6,19 +6,29 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
+import java.util.concurrent.ConcurrentHashMap
 
-class ChatHandler : TextWebSocketHandler() {
+/**
+ * Handles incoming WebSocket messages.
+ * Defines a simple 'protocol' for communication between clients and server, based on the following types of messages:
+ * - join
+ * - say
+ * - leave
+ * - users
+ * - left
+ * - history
+ */
+class ChatHandler(private val chatHistoryService: ChatHistoryService) : TextWebSocketHandler() {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val connectedUsers = HashMap<String, WebSocketSession>()
+    private val connectedUsers = ConcurrentHashMap<String, WebSocketSession>()
     private val historyRequestRegex = """\bhistory ([5-9]|[1-9][0-9]|100)\b""".toRegex()
-    private val chatHistoryService = ChatHistoryService()
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        log.info("WebSocketSession: {} - Received: {} - Connected users: {}", session.id, message.payload, connectedUsers.keys)
+
         val json = ObjectMapper().readTree(message.payload)
         val user = json.get("user").asText()
-
-        log.info("-Session: {} - Received: {} - Connected users: {}", session.id, json, connectedUsers.keys.map { it })
 
         when (json.get("type").asText()) {
             "say" -> {
